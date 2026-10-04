@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Solar Load Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="sun" aria-hidden="true"></div>
+    <div class="hero-in">
+      <h1>Solar Load <em>Calculator</em></h1>
+      <p class="lede">List what you want to power. Get the panels, batteries, inverter and charge controller you need, with every step worked out.</p>
+      <div class="live" id="live" aria-label="Current result"></div>
+    </div>
+  </header>
+
+  <div class="cols">
+    <div class="inputs">
+      <section class="panel" aria-labelledby="h-load">
+        <div class="ph">
+          <h2 id="h-load"><span class="num">1</span>Appliances</h2>
+          <div class="chips" role="group" aria-label="Example loads">
+            <button class="chip" type="button" data-preset="hostel">Hostel room</button>
+            <button class="chip" type="button" data-preset="flat">Two-bedroom flat</button>
+            <button class="chip" type="button" data-preset="shop">Small shop</button>
+            <button class="chip" type="button" id="clear">Clear all</button>
+          </div>
+        </div>
+        <p class="exnote" id="exNote" hidden></p>
+        <div class="stk-h">Where your daily energy goes</div>
+        <div class="stack" id="stack" role="img" aria-label="Share of daily energy by appliance"></div>
+        <div class="thead" aria-hidden="true">
+          <span>Appliance</span><span>Qty</span><span>Watts</span><span>Hours</span><span>Motor</span><span class="r">Wh/day</span><span></span>
+        </div>
+        <div id="rows"></div>
+        <div class="addbar">
+          <button class="btn" type="button" id="add">Add appliance</button>
+          <p class="tot" id="tot"></p>
+        </div>
+        <p class="hint" style="margin-top:12px">Hours is the time the appliance really draws power. A fridge compressor runs about 8 to 10 of every 24 hours. Tick Motor for fans, fridges, freezers and pumps, which pull extra current when they start.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-set">
+        <div class="ph"><h2 id="h-set"><span class="num">2</span>Site and equipment</h2></div>
+        <div class="settings">
+          <div class="fld">
+            <label class="lbl" for="psh">Peak sun hours (PSH)</label>
+            <input id="psh" type="number" inputmode="decimal" min="1" max="9" step="0.1">
+            <span class="hint">Southern Nigeria 4 to 5, northern 5.5 to 6.5.</span>
+          </div>
+          <div class="fld">
+            <label class="lbl" for="pr">Panel derating, PR (%)</label>
+            <input id="pr" type="number" inputmode="numeric" min="50" max="100" step="1">
+            <span class="hint">Heat, dust, cable and controller losses. 70 to 80 is typical.</span>
+          </div>
+          <div class="fld">
+            <label class="lbl" for="eff">Inverter efficiency (%)</label>
+            <input id="eff" type="number" inputmode="numeric" min="60" max="100" step="1">
+            <span class="hint">About 90 for most inverters.</span>
+          </div>
+          <div class="fld">
+            <label class="lbl" for="dod">Battery depth of discharge (%)</label>
+            <input id="dod" type="number" inputmode="numeric" min="20" max="100" step="5">
+            <span class="chips">
+              <button class="chip" type="button" data-dod="50">Lead-acid 50</button>
+              <button class="chip" type="button" data-dod="80">Lithium 80</button>
+            </span>
+          </div>
+          <div class="fld">
+            <label class="lbl" for="days">Days of autonomy</label>
+            <input id="days" type="number" inputmode="decimal" min="0.5" max="5" step="0.5">
+            <span class="hint">Cloudy days the batteries must carry.</span>
+          </div>
+          <div class="fld">
+            <label class="lbl" for="batAh">Battery size (Ah, 12 V each)</label>
+            <input id="batAh" type="number" inputmode="numeric" min="20" max="500" step="10">
+            <span class="hint">Common sizes: 100, 150, 200 Ah.</span>
+          </div>
+          <div class="fld">
+            <label class="lbl" for="panelW">Panel rating (W)</label>
+            <input id="panelW" type="number" inputmode="numeric" min="50" max="700" step="5">
+            <span class="hint">Common sizes: 300, 400, 550 W.</span>
+          </div>
+          <div class="fld">
+            <label class="lbl" for="sim">Loads running together (%)</label>
+            <input id="sim" type="number" inputmode="numeric" min="10" max="100" step="5">
+            <span class="hint">100 is the safe choice.</span>
+          </div>
+          <div class="fld">
+            <label class="lbl" for="volt">System voltage</label>
+            <select id="volt">
+              <option value="auto">Auto (match inverter size)</option>
+              <option value="12">12 V</option>
+              <option value="24">24 V</option>
+              <option value="48">48 V</option>
+            </select>
+            <span class="hint" id="voltHint"></span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="panel aside" id="results" aria-labelledby="h-res" aria-live="polite">
+      <div class="kpi" id="kpi"></div>
+      <div class="aside-b">
+        <h2 id="h-res">Your system</h2>
+        <div id="summary"></div>
+        <div class="actions">
+          <button class="btn" type="button" id="copy">Copy results</button>
+          <span id="status" role="status"></span>
+        </div>
+        <textarea id="fallback" readonly hidden aria-label="Results text to copy"></textarea>
+      </div>
+    </aside>
+  </div>
+
+  <section class="panel" aria-labelledby="h-work">
+    <h2 id="h-work">The working</h2>
+    <p class="hint" style="margin-top:6px">Each number below uses your current inputs. Change a value above and the steps update. Colours match the parts in your system.</p>
+    <ol class="steps" id="steps"></ol>
+  </section>
+
+  <p class="foot">These are the standard textbook sizing rules, good for coursework and a first estimate. Check a supplier's datasheets before you buy equipment.</p>
+</div>
+
+<div class="dock">
+  <span id="dockText"></span>
+  <button class="btn" type="button" id="dockGo">See system</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
